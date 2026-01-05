@@ -24,7 +24,8 @@ internal class Program
         {
             x.RoutePrefix = "monitoring"; // Set the route prefix for the dashboard
             x.DashboardTitle = "Test Application - Wolverine Dashboard";
-            x.WolverineConnectionString = "Host=localhost;Port=5432;Database=wv_db;Username=postgres;Password=postgres"; 
+            x.WolverineConnectionString = "Host=localhost;Port=5432;Database=wv_db;Username=postgres;Password=postgres";
+            x.Schema = "fbi_outbox";
         });
 
         var app = builder.Build();
@@ -49,7 +50,6 @@ internal class Program
             options.AuthenticationRealm = "Wolverine Monitoring";
 
             options.AutoRefreshIntervalSeconds = 30;
-            options.WolverineConnectionString = builder.Configuration.GetConnectionString("WolverineDb"); // Ambil dari config
         });
         // =====================================================
 

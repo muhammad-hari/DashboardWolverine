@@ -7,7 +7,7 @@
 
 		<!-- NuGet Package Metadata -->
 		<PackageId>WolverineFx.Dashboard</PackageId>
-		<Version>1.0.1</Version>
+		<Version>1.0.2</Version>
 		<Authors>Hari</Authors>
 		<Company></Company>
 		<Description>A beautiful and customizable monitoring dashboard for WolverineFx.</Description>
