@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.36414.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WolverineFx.Dashboard", "DashboardWolverine\WolverineFx.Dashboard.csproj", "{99853B16-0ECD-47F6-AB12-F6DA4921D366}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Sample", "Test\Sample.csproj", "{8AC85C7E-78AE-4D77-8D0B-48A97290A2F1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{99853B16-0ECD-47F6-AB12-F6DA4921D366}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99853B16-0ECD-47F6-AB12-F6DA4921D366}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99853B16-0ECD-47F6-AB12-F6DA4921D366}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99853B16-0ECD-47F6-AB12-F6DA4921D366}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8AC85C7E-78AE-4D77-8D0B-48A97290A2F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8AC85C7E-78AE-4D77-8D0B-48A97290A2F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8AC85C7E-78AE-4D77-8D0B-48A97290A2F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8AC85C7E-78AE-4D77-8D0B-48A97290A2F1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0BBCB25B-E95F-4BCC-8161-61F33B472F95}
+	EndGlobalSection
+EndGlobal
