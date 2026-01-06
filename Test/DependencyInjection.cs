@@ -39,7 +39,7 @@ namespace Test
                            .MaximumParallelMessages(1)
                            .ListenerCount(1);
                     
-                    options.PersistMessagesWithPostgresql("Host=localhost;Port=5432;Database=wv_db;Username=postgres;Password=postgres");
+                    options.PersistMessagesWithPostgresql("Host=localhost;Port=5432;Database=wv_db;Username=postgres;Password=postgres", "fbi_outbox");
 
                     options.Policies.LogMessageStarting(LogLevel.Information);
                     options.Policies.UseDurableInboxOnAllListeners();
