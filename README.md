@@ -1,39 +1,39 @@
 # Dashboard Wolverine - Monitoring Library
 
-Library monitoring dan dashboard untuk Wolverine Framework.
+A monitoring library and dashboard for the Wolverine Framework.
 
-## 🚀 Fitur
+## 🚀 List of features
 
-- ✅ **Dead Letters Management** - View, replay, dan delete dead letters
-- ✅ **Bulk Replay** - Replay multiple dead letters sekaligus
-- ✅ **Incoming Envelopes** - Monitor envelopes yang masuk
-- ✅ **Nodes Management** - Monitor Wolverine nodes
-- ✅ **Node Assignments** - Lihat assignment nodes
-- ✅ **Real-time Stats** - Dashboard statistik real-time
-- ✅ **Auto Refresh** - Refresh otomatis data
-- ✅ **Search & Filter** - Cari data dengan mudah
+- ✅ **Dead Letters Management** - View and retry dead-letter messages.
+- ✅ **Bulk Replay** - Replay multiple dead letters at once.
+- ✅ **Incoming Envelopes** - Monitor incoming envelopes.
+- ✅ **Nodes Management** - Monitor Wolverine nodes.
+- ✅ **Node Assignments** - View node assignments.
+- ✅ **Real-time Stats** - Real-time statistics dashboard.
+- ✅ **Auto Refresh** - Automatically refresh data.
+- ✅ **Search & Filter** - Easily search and filter data.
 
-## 📦 Instalasi
+## 📦 Installation Guide
 
 ### 1. Install NuGet Package
 
 ```bash
-dotnet add package Npgsql
+dotnet add package WolverineFx.Dashboard
 ```
 
-### 3. Register Service di Program.cs
+### 3. Register the service in Program.cs
 
 ```csharp
 using DashboardWolverine;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add Wolverine Repository
-var connectionString = builder.Configuration.GetConnectionString("WolverineDb") 
-    ?? throw new InvalidOperationException("Connection string 'WolverineDb' not found.");
-builder.Services.AddSingleton(new WolverineRepository(connectionString));
-
 builder.Services.AddControllers();
+
+// Register Dashboard
+builder.Services.AddMonitoringDashboard(config =>
+{
+    config.WolverineConnectionString = "npgsql connection string";
+});
 
 var app = builder.Build();
 
@@ -41,9 +41,6 @@ var app = builder.Build();
 app.UseMonitoringDashboard(options =>
 {
     options.RoutePrefix = "/wolverine-ui";
-    options.DashboardTitle = "Dashboard Wolverine - Monitoring";
-    options.EnableAutoRefresh = true;
-    options.AutoRefreshIntervalSeconds = 30;
 });
 
 app.MapControllers();
@@ -52,34 +49,28 @@ app.Run();
 
 ## 🖥️ Dashboard UI
 
-Akses dashboard melalui browser:
+Access the dashboard through your browser:
 
 ```
 https://localhost:5001/wolverine-ui
 ```
 
-atau untuk dashboard Wolverine khusus:
-
-```
-https://localhost:5001/monitoring/dashboard.html
-```
-
-### Fitur Dashboard:
+### Dashboard Features:
 
 1. **Dead Letters Tab**
-   - List semua dead letters
-   - Select multiple items untuk bulk replay/unreplay
+   - View all dead letters
+   - Select multiple items for bulk retry
    - Search & filter
-   - View detail message
-   - Delete individual dead letter
+   - View message details
+   - Delete individual dead letters
 
 2. **Incoming Envelopes Tab**
-   - Monitor envelopes yang masuk
-   - Filter by status dan message type
-   - View attempts dan execution time
+   - Monitor incoming envelopes
+   - Filter by status and message type
+   - View retry attempts and execution time
 
 3. **Nodes Tab**
-   - Monitor status nodes (Healthy/Unhealthy)
+   - Monitor node status (Healthy / Unhealthy)
    - Health check monitoring
    - Node capabilities
 
@@ -87,21 +78,21 @@ https://localhost:5001/monitoring/dashboard.html
    - View node assignments
    - Monitor started time
 
-## 🗄️ Database Tables
-
-Library ini bekerja dengan tabel Wolverine standar:
-
-- `wolverine_dead_letters`
-- `wolverine_incoming_envelopes`
-- `wolverine_nodes`
-- `wolverine_node_assignments`
-
 ## ⚙️ Configuration Options
+
+```csharp
+builder.Services.AddMonitoringDashboard(config =>
+{
+    config.WolverineConnectionString = "npgsql connection string"; // Npgsql Connection string
+
+    config.Schema = "schema"; // database schema for wolverine tables (optional)
+});
+```
 
 ```csharp
 app.UseMonitoringDashboard(options =>
 {
-    options.RoutePrefix = "/wolverine-ui";                    // Dashboard URL prefix
+    options.RoutePrefix = "/wolverine-ui";                  // Dashboard URL prefix
     options.DashboardTitle = "My Dashboard";                // Dashboard title
     options.EnableAutoRefresh = true;                       // Enable auto refresh
     options.AutoRefreshIntervalSeconds = 30;                // Refresh interval
@@ -110,20 +101,20 @@ app.UseMonitoringDashboard(options =>
 
 ## 🔒 Security
 
-**PENTING**: Dashboard ini memiliki autentikasi built-in. Untuk production:
+**IMPORTANT**: This dashboard includes built-in authentication. For production environments:
 
-1. Tambahkan authorization pada username & password
+1. Add authorization using a username and password
 2. Restrict access by IP/Network
-3. Gunakan HTTPS
+3. Use HTTPS
 
-Contoh menambahkan authorization:
+Example of adding authorization:
 
 ```csharp
 app.UseMonitoringDashboard(options =>
 {
     // other options ...
-    options.Username = "admin" ;                                   // Set username
-    options.Password = "password";                                // Set password
+    options.Username = "admin" ;       // Set username
+    options.Password = "password";     // Set password
 });
 ```
 
@@ -137,4 +128,4 @@ Contributions are welcome! Please open an issue or submit a pull request.
 
 ## 📞 Support
 
-Untuk pertanyaan atau issue, silakan buka GitHub issue.
+For questions or issues, please open a GitHub issue.
