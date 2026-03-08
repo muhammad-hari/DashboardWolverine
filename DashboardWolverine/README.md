@@ -2,9 +2,10 @@
 
 A monitoring library and dashboard for the Wolverine Framework.
 
-<img width="1858" height="1382" alt="dashboard" src="wwwroot/assets/dashboard.png" />
+<img width="1858" height="1382" alt="dashboard" src="https://github.com/user-attachments/assets/f2fda76f-1b48-44fe-9bae-e803e6506e8c" />
 
-<img width="1858" height="1382" alt="dashboard" src="wwwroot/assets/detail.png" />
+<img width="1858" height="1382" alt="detail" src="https://github.com/user-attachments/assets/b9965fff-1c5e-4b2e-975c-ef0a81113c4d" />
+
 
 ## 🚀 List of features
 
