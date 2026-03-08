@@ -5,48 +5,25 @@ using DashboardWolverine.Repositories;
 namespace DashboardWolverine;
 
 /// <summary>
-/// Extension methods untuk setup Monitoring Dashboard
+/// Extension methods to set up the Monitoring Dashboard
 /// </summary>
 public static class MonitoringDashboardExtensions
 {
     /// <summary>
-    /// Menambahkan Monitoring Dashboard middleware ke aplikasi ASP.NET Core.
-    /// Dashboard akan accessible di route yang ditentukan (default: /monitoring)
+    /// Adds the Monitoring Dashboard middleware to the ASP.NET Core application.
+    /// The dashboard will be accessible at the configured route (default: /monitoring).
     /// </summary>
-    public static IApplicationBuilder UseMonitoringDashboard(
-        this IApplicationBuilder app,
-        Action<MonitoringDashboardOptions>? configure = null)
+    public static IApplicationBuilder UseMonitoringDashboard(this IApplicationBuilder app)
     {
-        var options = new MonitoringDashboardOptions();
-        configure?.Invoke(options);
-        options.Validate();
-
-        // Register WolverineRepository if connection string is provided
-        if (!string.IsNullOrWhiteSpace(options.WolverineConnectionString))
-        {
-            var serviceProvider = app.ApplicationServices;
-            
-            // Check if WolverineRepository is already registered
-            var existingRepository = serviceProvider.GetService<WolverineRepository>();
-            if (existingRepository == null)
-            {
-                // Register as singleton in the service collection
-                var services = serviceProvider.GetService<IServiceCollection>();
-                if (services != null)
-                {
-                    services.AddSingleton(new WolverineRepository(options.WolverineConnectionString, options.Schema));
-                }
-            }
-        }
-
+        var options = app.ApplicationServices.GetRequiredService<MonitoringDashboardOptions>();
         app.UseMiddleware<MonitoringDashboardMiddleware>(options);
 
         return app;
     }
 
     /// <summary>
-    /// Menambahkan Monitoring Dashboard services ke dependency injection container.
-    /// Optional - gunakan ini jika ingin inject MonitoringDashboardOptions ke service lain.
+    /// Adds Monitoring Dashboard services to the dependency injection container.
+    /// Optional - use this if you want to inject `MonitoringDashboardOptions` into other services.
     /// </summary>
     public static IServiceCollection AddMonitoringDashboard(
         this IServiceCollection services,

@@ -46,8 +46,6 @@
 
 	<ItemGroup>
 		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
-		<PackageReference Include="WolverineFx" Version="3.13.5" />
-		<PackageReference Include="WolverineFx.Postgresql" Version="3.13.5" />
 	</ItemGroup>
 
 </Project>

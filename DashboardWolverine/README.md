@@ -2,6 +2,8 @@
 
 A monitoring library and dashboard for the Wolverine Framework.
 
+<img width="1858" height="1382" alt="dashboard" src="/wwwroot/assets/dashboard.png" />
+
 ## 🚀 List of features
 
 - ✅ **Dead Letters Management** - View and retry dead-letter messages.
@@ -33,15 +35,13 @@ builder.Services.AddControllers();
 builder.Services.AddMonitoringDashboard(config =>
 {
     config.WolverineConnectionString = "npgsql connection string";
+    config.RoutePrefix = "/wolverine-ui";
 });
 
 var app = builder.Build();
 
 // Use Monitoring Dashboard
-app.UseMonitoringDashboard(options =>
-{
-    options.RoutePrefix = "/wolverine-ui";
-});
+app.UseMonitoringDashboard();
 
 app.MapControllers();
 app.Run();
@@ -86,17 +86,16 @@ builder.Services.AddMonitoringDashboard(config =>
     config.WolverineConnectionString = "npgsql connection string"; // Npgsql Connection string
 
     config.Schema = "schema"; // database schema for wolverine tables (optional)
+
+    config.RoutePrefix = "/wolverine-ui";                  // Dashboard URL prefix
+    config.DashboardTitle = "My Dashboard";                // Dashboard title
+    config.EnableAutoRefresh = true;                       // Enable auto refresh
+    config.AutoRefreshIntervalSeconds = 30;                // Refresh interval
 });
 ```
 
 ```csharp
-app.UseMonitoringDashboard(options =>
-{
-    options.RoutePrefix = "/wolverine-ui";                  // Dashboard URL prefix
-    options.DashboardTitle = "My Dashboard";                // Dashboard title
-    options.EnableAutoRefresh = true;                       // Enable auto refresh
-    options.AutoRefreshIntervalSeconds = 30;                // Refresh interval
-});
+app.UseMonitoringDashboard();
 ```
 
 ## 🔒 Security
@@ -110,11 +109,11 @@ app.UseMonitoringDashboard(options =>
 Example of adding authorization:
 
 ```csharp
-app.UseMonitoringDashboard(options =>
+app.AddMonitoringDashboard(config =>
 {
     // other options ...
-    options.Username = "admin" ;       // Set username
-    options.Password = "password";     // Set password
+    config.Username = "admin" ;       // Set username
+    config.Password = "password";     // Set password
 });
 ```
 

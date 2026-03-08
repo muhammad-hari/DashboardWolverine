@@ -16,16 +16,16 @@ namespace Test
             {
                 hostBuilder.UseWolverine(options =>
                 {
-                    options.UseKafka("localhost:19092")
+                    options.UseKafka("172.17.200.9:19092")
                         .ConfigureClient(config =>
                         {
                             config.AllowAutoCreateTopics = true;
-                            config.BootstrapServers = "localhost:19092";
+                            config.BootstrapServers = "172.17.200.9:19092";
                         })
                         .ConfigureConsumers(config =>
                         {
                             config.AllowAutoCreateTopics = true;
-                            config.BootstrapServers = "localhost:19092";
+                            config.BootstrapServers = "172.17.200.9:19092";
                         });
 
                     options.UseSystemTextJsonForSerialization(x =>
