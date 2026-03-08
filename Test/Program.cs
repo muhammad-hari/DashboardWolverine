@@ -1,4 +1,5 @@
 using DashboardWolverine;
+using Microsoft.Extensions.Options;
 using Test;
 using Wolverine;
 using Wolverine.Http;
@@ -20,26 +21,13 @@ internal class Program
         builder.Services.AddSwaggerGen();
 
 
-        builder.Services.AddMonitoringDashboard(x =>
+        builder.Services.AddMonitoringDashboard(options =>
         {
-            x.RoutePrefix = "monitoring"; // Set the route prefix for the dashboard
-            x.DashboardTitle = "Test Application - Wolverine Dashboard";
-            x.WolverineConnectionString = "Host=localhost;Port=5432;Database=wv_db;Username=postgres;Password=postgres";
-            x.Schema = "fbi_outbox";
-        });
+            options.RoutePrefix = "monitoring"; // Set the route prefix for the dashboard
+            options.DashboardTitle = "Test Application - Wolverine Dashboard";
+            options.WolverineConnectionString = "Host=172.17.200.9;Port=5432;Database=wv_db;Username=postgres;Password=postgres";
+            options.Schema = "fbi_outbox";
 
-        var app = builder.Build();
-
-        // Configure the HTTP request pipeline.
-        if (app.Environment.IsDevelopment())
-        {
-            app.UseSwagger();
-            app.UseSwaggerUI();
-        }
-
-        // ===== SETUP MONITORING DASHBOARD (mirip Hangfire) =====
-        app.UseMonitoringDashboard(options =>
-        {
             options.RoutePrefix = "/wolverine-ui";
             options.DashboardTitle = "Test Application - Wolverine Dashboard";
             options.EnableAutoRefresh = false;
@@ -51,8 +39,17 @@ internal class Program
 
             options.AutoRefreshIntervalSeconds = 30;
         });
-        // =====================================================
 
+        var app = builder.Build();
+
+        // Configure the HTTP request pipeline.
+        if (app.Environment.IsDevelopment())
+        {
+            app.UseSwagger();
+            app.UseSwaggerUI();
+        }
+
+        app.UseMonitoringDashboard();
 
         app.UseHttpsRedirection();
 

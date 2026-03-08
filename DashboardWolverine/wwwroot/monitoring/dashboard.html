@@ -1415,8 +1415,32 @@
         const config = {
             autoRefresh: {{AUTO_REFRESH}},
             refreshInterval: {{REFRESH_INTERVAL}},
-            basePath: '{{BASE_PATH}}'
+            basePath: '{{BASE_PATH}}',
+            addServerPath: '{{ADD_SERVER_PATH}}'
         };
+
+        // Helper to try an optional server path prefix first, then fallback to plain path.
+        async function fetchWithFallback(path, init) {
+            const candidates = [];
+            if (config.addServerPath && config.addServerPath.trim() !== '') candidates.push(config.addServerPath.trim());
+            candidates.push('');
+            let lastError = null;
+
+            for (const base of candidates) {
+                const baseNormalized = base ? base.replace(/\/+$/, '') : '';
+                const p = path.startsWith('/') ? path : '/' + path;
+                const url = baseNormalized ? baseNormalized + p : p;
+                try {
+                    const res = await fetch(url, init);
+                    if (res.ok) return res;
+                    lastError = new Error(`HTTP ${res.status}`);
+                } catch (e) {
+                    lastError = e;
+                }
+            }
+
+            throw lastError;
+        }
 
         let currentTab = 'deadLetters';
         let deadLettersData = [];
@@ -1462,8 +1486,22 @@
                 enableTime: true,
                 dateFormat: "Y-m-d H:i",
                 time_24hr: true,
-                onChange: function(selectedDates, dateStr, instance) {
+                onChange: function(selectedDates) {
                     filters.dateStart = selectedDates[0] || null;
+                    if (selectedDates[0]) {
+                        const maxEnd = new Date(selectedDates[0]);
+                        maxEnd.setMonth(maxEnd.getMonth() + 1);
+                        dateEndPicker.set('minDate', selectedDates[0]);
+                        dateEndPicker.set('maxDate', maxEnd);
+                        // Clear end if it violates the new range
+                        if (filters.dateEnd && (filters.dateEnd < selectedDates[0] || filters.dateEnd > maxEnd)) {
+                            dateEndPicker.clear();
+                            filters.dateEnd = null;
+                        }
+                    } else {
+                        dateEndPicker.set('minDate', null);
+                        dateEndPicker.set('maxDate', null);
+                    }
                 }
             });
 
@@ -1471,7 +1509,7 @@
                 enableTime: true,
                 dateFormat: "Y-m-d H:i",
                 time_24hr: true,
-                onChange: function(selectedDates, dateStr, instance) {
+                onChange: function(selectedDates) {
                     filters.dateEnd = selectedDates[0] || null;
                 }
             });
@@ -1480,8 +1518,22 @@
                 enableTime: true,
                 dateFormat: "Y-m-d H:i",
                 time_24hr: true,
-                onChange: function(selectedDates, dateStr, instance) {
+                onChange: function(selectedDates) {
                     envelopeFilters.dateStart = selectedDates[0] || null;
+                    if (selectedDates[0]) {
+                        const maxEnd = new Date(selectedDates[0]);
+                        maxEnd.setMonth(maxEnd.getMonth() + 1);
+                        envelopeDateEndPicker.set('minDate', selectedDates[0]);
+                        envelopeDateEndPicker.set('maxDate', maxEnd);
+                        // Clear end if it violates the new range
+                        if (envelopeFilters.dateEnd && (envelopeFilters.dateEnd < selectedDates[0] || envelopeFilters.dateEnd > maxEnd)) {
+                            envelopeDateEndPicker.clear();
+                            envelopeFilters.dateEnd = null;
+                        }
+                    } else {
+                        envelopeDateEndPicker.set('minDate', null);
+                        envelopeDateEndPicker.set('maxDate', null);
+                    }
                 }
             });
             
@@ -1489,7 +1541,7 @@
                 enableTime: true,
                 dateFormat: "Y-m-d H:i",
                 time_24hr: true,
-                onChange: function(selectedDates, dateStr, instance) {
+                onChange: function(selectedDates) {
                     envelopeFilters.dateEnd = selectedDates[0] || null;
                 }
             });
@@ -1527,7 +1579,7 @@
         // Load stats
         async function loadStats() {
             try {
-                const response = await fetch('/api/wolverine/stats');
+                const response = await fetchWithFallback('/api/wolverine/stats');
                 const data = await response.json();
                 
                 document.getElementById('totalDeadLetters').textContent = data.totalDeadLetters || 0;
@@ -1558,7 +1610,7 @@
                 if (filters.dateStart) params.append('startDate', filters.dateStart.toISOString());
                 if (filters.dateEnd) params.append('endDate', filters.dateEnd.toISOString());
                 
-                const response = await fetch(`/api/wolverine/dead-letters?${params.toString()}`);
+                const response = await fetchWithFallback(`/api/wolverine/dead-letters?${params.toString()}`);
                 const result = await response.json();
                 
                 deadLettersData = result.data || [];
@@ -1786,7 +1838,7 @@
             if (!confirm(`Replay ${selected.length} dead letter(s)?`)) return;
             
             try {
-                const response = await fetch('/api/wolverine/dead-letters/replay-multiple', {
+                const response = await fetchWithFallback('/api/wolverine/dead-letters/replay-multiple', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1813,7 +1865,7 @@
             if (!confirm(`Set ${selected.length} dead letter(s) as non-replayable?`)) return;
             
             try {
-                const response = await fetch('/api/wolverine/dead-letters/replay-multiple', {
+                const response = await fetchWithFallback('/api/wolverine/dead-letters/replay-multiple', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1842,7 +1894,7 @@
             if (!confirm('Delete this dead letter?')) return;
             
             try {
-                const response = await fetch(`/api/wolverine/dead-letters/${id}?receivedAt=${encodeURIComponent(receivedAt)}`, {
+                const response = await fetchWithFallback(`/api/wolverine/dead-letters/${id}?receivedAt=${encodeURIComponent(receivedAt)}`, {
                     method: 'DELETE'
                 });
                 
@@ -1904,10 +1956,7 @@
                     <div class="modal__field-value">${item.receivedAt || 'N/A'}</div>
                 </div>
                 
-                <div class="modal__field">
-                    <span class="modal__field-label">Sent At</span>
-                    <div class="modal__field-value">${item.sentAt ? new Date(item.sentAt).toLocaleString() : 'N/A'}</div>
-                </div>
+                
                 
                 <div class="modal__field">
                     <span class="modal__field-label">Execution Time</span>
@@ -1929,14 +1978,21 @@
                     <div class="modal__field-value">${item.exceptionMessage || 'N/A'}</div>
                 </div>
                 
-                <div class="modal__field">
-                    <span class="modal__field-label">Replayable</span>
-                    <div class="modal__field-value">${item.replayable ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-danger">No</span>'}</div>
-                </div>
+                
                 
                 <div class="modal__field">
-                    <span class="modal__field-label">Body Content (JSON)</span>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                        <span class="modal__field-label">Body Content (JSON)</span>
+                        <button class="btn btn-sm mt-2" onclick="copyBodyContent(event)">
+                        <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                        Copy Content
+                    </button>
+                    </div>
                     <div class="modal__field-value" style="font-family: 'Courier New', monospace; white-space: pre; word-break: break-word; background: var(--muted); padding: 1rem; border-radius: var(--radius); max-height: 400px; overflow-y: auto; border: 1px solid var(--border); font-size: 0.875rem; line-height: 1.5;">${escapeHtml(bodyText)}</div>
+                    
                 </div>
             `;
             
@@ -1999,7 +2055,7 @@
                 if (envelopeFilters.dateStart) params.append('startDate', envelopeFilters.dateStart.toISOString());
                 if (envelopeFilters.dateEnd) params.append('endDate', envelopeFilters.dateEnd.toISOString());
                 
-                const response = await fetch(`/api/wolverine/incoming-envelopes?${params}`);
+                const response = await fetchWithFallback(`/api/wolverine/incoming-envelopes?${params}`);
                 const result = await response.json();
                 
                 incomingEnvelopesData = result.data || [];
@@ -2166,7 +2222,7 @@
             content.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading...</p></div>';
             
             try {
-                const response = await fetch('/api/wolverine/nodes');
+                const response = await fetchWithFallback('/api/wolverine/nodes');
                 const result = await response.json();
                 const data = result.data || [];
                 
@@ -2204,7 +2260,7 @@
             content.innerHTML = '<div class="loading"><div class="spinner"></div><p>Loading...</p></div>';
             
             try {
-                const response = await fetch('/api/wolverine/node-assignments');
+                const response = await fetchWithFallback('/api/wolverine/node-assignments');
                 const result = await response.json();
                 const data = result.data || [];
                 

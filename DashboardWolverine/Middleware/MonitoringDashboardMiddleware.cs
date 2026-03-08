@@ -257,7 +257,8 @@ public class MonitoringDashboardMiddleware
             .Replace("{{DEFAULT_ENDPOINT}}", _options.DefaultDataEndpoint)
             .Replace("{{BASE_PATH}}", _options.RoutePrefix)
             .Replace("{{AUTO_REFRESH}}", _options.EnableAutoRefresh.ToString().ToLower())
-            .Replace("{{REFRESH_INTERVAL}}", (_options.AutoRefreshIntervalSeconds * 1000).ToString());
+            .Replace("{{REFRESH_INTERVAL}}", (_options.AutoRefreshIntervalSeconds * 1000).ToString())
+            .Replace("{{ADD_SERVER_PATH}}", _options.AddServerPath ?? string.Empty);
 
         // Add custom CSS if provided
         if (!string.IsNullOrEmpty(_options.CustomCss))
@@ -328,7 +329,7 @@ public class MonitoringDashboardMiddleware
 
     private string GetFallbackHtml()
     {
-        return $@"<!DOCTYPE html>
+        return @"<!DOCTYPE html>
 <html lang='en'>
 <head>
     <meta charset='UTF-8'>
@@ -502,6 +503,33 @@ public class MonitoringDashboardMiddleware
     <script>
         let autoRefreshInterval;
 
+        const config = {
+            addServerPath: '{{ADD_SERVER_PATH}}'
+        };
+
+        // Try configured addServerPath first, then fallback to plain path
+        async function fetchWithFallback(path, init) {
+            const candidates = [];
+            if (config.addServerPath && config.addServerPath.trim() !== '') candidates.push(config.addServerPath.trim());
+            candidates.push('');
+            let lastError = null;
+
+            for (const base of candidates) {
+                const baseNormalized = base ? base.replace(/\/+$/, '') : '';
+                const p = path.startsWith('/') ? path : '/' + path;
+                const url = baseNormalized ? baseNormalized + p : p;
+                try {
+                    const res = await fetch(url, init);
+                    if (res.ok) return res;
+                    lastError = new Error(`HTTP ${res.status}`);
+                } catch (e) {
+                    lastError = e;
+                }
+            }
+
+            throw lastError;
+        }
+
         async function fetchData() {{
             const endpoint = document.getElementById('apiEndpoint').value;
             const dataContent = document.getElementById('dataContent');
@@ -514,7 +542,7 @@ public class MonitoringDashboardMiddleware
             dataContent.innerHTML = '<div class=""loading""><div class=""spinner""></div><p>Loading data...</p></div>';
 
             try {{
-                const response = await fetch(endpoint);
+                const response = await fetchWithFallback(endpoint);
                 
                 if (!response.ok) {{
                     throw new Error(`HTTP error! status: ${{response.status}}`);

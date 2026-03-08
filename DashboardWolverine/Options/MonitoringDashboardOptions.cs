@@ -3,89 +3,95 @@
 namespace DashboardWolverine;
 
 /// <summary>
-/// Configuration options untuk Monitoring Dashboard
+/// Configuration options for the Monitoring Dashboard
 /// </summary>
 public class MonitoringDashboardOptions
 {
     /// <summary>
-    /// URL path prefix untuk dashboard. Default: "/monitoring"
+    /// URL path prefix for the dashboard. Default: "/wolverine-ui"
     /// </summary>
     public string RoutePrefix { get; set; } = "/wolverine-ui";
 
     /// <summary>
-    /// Judul yang ditampilkan di header dashboard. Default: "API Monitoring Dashboard"
+    /// Title displayed in the dashboard header. Default: "API Monitoring Dashboard"
     /// </summary>
     public string DashboardTitle { get; set; } = "API Monitoring Dashboard";
 
     /// <summary>
-    /// Default API endpoint untuk fetch monitoring data. Default: "/api/monitoring/stats"
+    /// Default API endpoint used to fetch monitoring data. Default: "/api/monitoring/stats"
     /// </summary>
     public string DefaultDataEndpoint { get; set; }
 
     /// <summary>
-    /// Function untuk authorization. Return true untuk allow access, false untuk deny.
-    /// Default: null (allow all)
+    /// Authorization function. Return true to allow access, false to deny.
+    /// Default: null (allow all requests).
     /// </summary>
     public Func<HttpContext, bool>? Authorization { get; set; }
 
     /// <summary>
-    /// Path ke custom HTML file (optional). Jika null, akan menggunakan embedded HTML default.
+    /// Path to a custom HTML file (optional). If null, the embedded default HTML will be used.
     /// </summary>
     public string? CustomHtmlPath { get; set; }
 
     /// <summary>
-    /// Enable auto-refresh data di dashboard. Default: true
+    /// Enable automatic data refresh on the dashboard. Default: true
     /// </summary>
     public bool EnableAutoRefresh { get; set; } = true;
 
     /// <summary>
-    /// Auto-refresh interval dalam detik. Default: 60
-    /// Minimum: 5 detik
+    /// Auto-refresh interval in seconds. Default: 60. Minimum: 5 seconds.
     /// </summary>
     public int AutoRefreshIntervalSeconds { get; set; } = 60;
 
     /// <summary>
-    /// Custom CSS untuk styling dashboard (optional)
+    /// Custom CSS for dashboard styling (optional).
     /// </summary>
     public string? CustomCss { get; set; }
 
     /// <summary>
-    /// PostgreSQL connection string untuk Wolverine database.
-    /// Required untuk menggunakan Wolverine monitoring features.
+    /// PostgreSQL connection string for the Wolverine database.
+    /// Required to use Wolverine monitoring features.
     /// Format: "Host=localhost;Port=5432;Database=db_name;Username=user;Password=pass"
     /// </summary>
     public string? WolverineConnectionString { get; set; }
 
     /// <summary>
-    /// Database schema untuk Wolverine tables.
-    /// Jika diset, semua query akan menggunakan schema prefix (e.g., "myschema.wolverine_dead_letters").
-    /// Jika null atau empty, query akan menggunakan default schema.
-    /// Default: null (menggunakan default schema)
+    /// Database schema for Wolverine tables.
+    /// If set, queries will use the schema prefix (e.g., "myschema.wolverine_dead_letters").
+    /// If null or empty, the default schema will be used.
+    /// Default: null (use default schema).
     /// </summary>
     public string? Schema { get; set; }
 
     /// <summary>
-    /// Username untuk Basic Authentication.
-    /// Jika diset (tidak null/empty), dashboard akan memerlukan Basic Auth.
-    /// Username harus dikombinasikan dengan Password.
+    /// Optional additional server path prefix to try when calling API endpoints.
+    /// Example: if your app is hosted under "/xyz", set this to "/xyz" so frontend
+    /// will try "/xyz/api/..." in addition to "/api/...".
+    /// </summary>
+    public string? AddServerPath { get; set; }
+
+    /// <summary>
+    /// Username for Basic Authentication.
+    /// If set (not null/empty), the dashboard will require Basic Auth.
+    /// Username must be provided together with a password.
     /// </summary>
     public string? Username { get; set; }
 
     /// <summary>
-    /// Password untuk Basic Authentication.
-    /// Jika diset (tidak null/empty), dashboard akan memerlukan Basic Auth.
-    /// Password harus dikombinasikan dengan Username.
+    /// Password for Basic Authentication.
+    /// If set (not null/empty), the dashboard will require Basic Auth.
+    /// Password must be provided together with a username.
     /// </summary>
     public string? Password { get; set; }
 
     /// <summary>
-    /// Realm name untuk Basic Authentication prompt.
+    /// Realm name for the Basic Authentication prompt.
     /// Default: "Monitoring Dashboard"
     /// </summary>
     public string AuthenticationRealm { get; set; } = "Monitoring Dashboard";
 
     /// <summary>
-    /// Cek apakah Basic Authentication diaktifkan (ada username dan password)
+    /// Checks whether Basic Authentication is enabled (both username and password are set).
     /// </summary>
     internal bool IsBasicAuthEnabled => !string.IsNullOrWhiteSpace(Username) && !string.IsNullOrWhiteSpace(Password);
 
@@ -101,12 +107,21 @@ public class MonitoringDashboardOptions
             RoutePrefix = "/" + RoutePrefix;
         }
 
+        // Normalize AddServerPath: ensure leading slash and no trailing slash
+        if (!string.IsNullOrWhiteSpace(AddServerPath))
+        {
+            AddServerPath = AddServerPath.Trim();
+            if (!AddServerPath.StartsWith("/"))
+                AddServerPath = "/" + AddServerPath;
+            AddServerPath = AddServerPath.TrimEnd('/');
+        }
+
         if (AutoRefreshIntervalSeconds < 5)
         {
             throw new ArgumentException("AutoRefreshIntervalSeconds must be at least 5 seconds", nameof(AutoRefreshIntervalSeconds));
         }
 
-        // Validate Basic Auth: jika salah satu diset, keduanya harus diset
+        // Validate Basic Auth: if one is set, both must be set
         var hasUsername = !string.IsNullOrWhiteSpace(Username);
         var hasPassword = !string.IsNullOrWhiteSpace(Password);
 
