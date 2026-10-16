@@ -49,6 +49,34 @@ app.MapControllers();
 app.Run();
 ```
 
+### Configuration-based registration
+
+For an existing Wolverine application, the dashboard can read its settings from
+`WolverineDashboard` and `ConnectionStrings:WolverineDb`:
+
+```csharp
+builder.Services.AddMonitoringDashboard(builder.Configuration);
+app.UseMonitoringDashboard();
+```
+
+Example configuration:
+
+```json
+{
+  "WolverineDashboard": {
+    "RoutePrefix": "/wolverine-ui",
+    "DashboardTitle": "Wolverine Monitoring",
+    "DefaultDataEndpoint": "/api/wolverine/stats",
+    "Schema": "fbi_outbox",
+    "EnableAutoRefresh": true,
+    "AutoRefreshIntervalSeconds": 60
+  },
+  "ConnectionStrings": {
+    "WolverineDb": "Host=localhost;Port=5432;Database=app;Username=postgres;Password=..."
+  }
+}
+```
+
 ## 🖥️ Dashboard UI
 
 Access the dashboard through your browser:

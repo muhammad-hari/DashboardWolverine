@@ -19,8 +19,11 @@ public class WolverineRepository
     {
         return string.IsNullOrWhiteSpace(_schema) 
             ? tableName 
-            : $"{_schema}.{tableName}";
+            : $"{QuoteIdentifier(_schema)}.{tableName}";
     }
+
+    private static string QuoteIdentifier(string identifier)
+        => $"\"{identifier.Replace("\"", "\"\"")}\"";
 
     #region Dead Letters CRUD
 

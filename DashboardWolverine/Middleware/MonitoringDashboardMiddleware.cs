@@ -103,6 +103,8 @@ public class MonitoringDashboardMiddleware
 
     private async Task ServeDashboardAsync(HttpContext context)
     {
+        context.Response.Headers.CacheControl = "no-store, no-cache";
+
         // Check Basic Authentication first (if enabled)
         if (_options.IsBasicAuthEnabled)
         {

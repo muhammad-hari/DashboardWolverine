@@ -1,14 +1,16 @@
+using System.Text.Json.Serialization;
+
 namespace DashboardWolverine.Models;
 
 public class WolverineIncomingEnvelope
 {
-    public Guid Id { get; set; }
-    public string Status { get; set; } = string.Empty;
-    public int OwnerId { get; set; }
-    public DateTime? ExecutionTime { get; set; }
-    public int Attempts { get; set; }
-    public byte[] Body { get; set; } = Array.Empty<byte>();
-    public string MessageType { get; set; } = string.Empty;
-    public string ReceivedAt { get; set; } = string.Empty;
-    public DateTime? KeepUntil { get; set; }
+    [JsonPropertyName("Id")] public Guid Id { get; set; }
+    [JsonPropertyName("Status")] public string Status { get; set; } = string.Empty;
+    [JsonPropertyName("OwnerId")] public int OwnerId { get; set; }
+    [JsonPropertyName("ExecutionTime")] public DateTime? ExecutionTime { get; set; }
+    [JsonPropertyName("Attempts")] public int Attempts { get; set; }
+    [JsonPropertyName("Body")] public byte[] Body { get; set; } = Array.Empty<byte>();
+    [JsonPropertyName("MessageType")] public string MessageType { get; set; } = string.Empty;
+    [JsonPropertyName("ReceivedAt")] public string ReceivedAt { get; set; } = string.Empty;
+    [JsonPropertyName("KeepUntil")] public DateTime? KeepUntil { get; set; }
 }

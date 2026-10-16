@@ -1,27 +1,22 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 
-		<!-- NuGet Package Metadata -->
 		<PackageId>WolverineFx.Dashboard</PackageId>
-		<Version>1.0.3</Version>
+		<Version>2.0.3</Version>
 		<Authors>Hari</Authors>
-		<Company></Company>
 		<Description>A beautiful and customizable monitoring dashboard for WolverineFx.</Description>
-		<PackageTags>monitoring;dashboard;aspnetcore;middleware;wolverinefx;ui</PackageTags>
-		<PackageProjectUrl>https://github.com/muhammad-hari/DashboardWolverine</PackageProjectUrl>
-		<RepositoryUrl>https://github.com/muhammad-hari/DashboardWolverine</RepositoryUrl>
+		<PackageTags>monitoring;dashboard;aspnetcore;wolverinefx;ui</PackageTags>
+		<PackageProjectUrl>https://github.com/yasarozg/DashboardWolverine</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/yasarozg/DashboardWolverine</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
-		<!-- Embed wwwroot files -->
 		<GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
 		<IsPackable>true</IsPackable>
-
-
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -29,23 +24,14 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Microsoft.Extensions.FileProviders.Embedded" Version="8.0.0" />
-		<PackageReference Include="Npgsql" Version="8.0.6" />
+		<PackageReference Include="Npgsql" Version="10.0.0" />
 	</ItemGroup>
 
-
-	<!-- Embed all wwwroot files as resources -->
 	<ItemGroup>
+		<!-- The old standalone sample host is not part of the reusable library. -->
+		<Compile Remove="Program.cs" />
 		<EmbeddedResource Include="wwwroot\**\*" />
-	</ItemGroup>
-
-	<!-- Include README and icon in package -->
-	<ItemGroup>
 		<None Include="README.md" Pack="true" PackagePath="\" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.2" />
 	</ItemGroup>
 
 </Project>

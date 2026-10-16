@@ -1,12 +1,14 @@
+using System.Text.Json.Serialization;
+
 namespace DashboardWolverine.Models;
 
 public class WolverineNode
 {
-    public Guid Id { get; set; }
-    public int NodeNumber { get; set; }
-    public string Description { get; set; } = string.Empty;
-    public string Uri { get; set; } = string.Empty;
-    public DateTime Started { get; set; }
-    public DateTime HealthCheck { get; set; }
-    public string[]? Capabilities { get; set; }
+    [JsonPropertyName("Id")] public Guid Id { get; set; }
+    [JsonPropertyName("NodeNumber")] public int NodeNumber { get; set; }
+    [JsonPropertyName("Description")] public string Description { get; set; } = string.Empty;
+    [JsonPropertyName("Uri")] public string Uri { get; set; } = string.Empty;
+    [JsonPropertyName("Started")] public DateTime Started { get; set; }
+    [JsonPropertyName("HealthCheck")] public DateTime HealthCheck { get; set; }
+    [JsonPropertyName("Capabilities")] public string[]? Capabilities { get; set; }
 }

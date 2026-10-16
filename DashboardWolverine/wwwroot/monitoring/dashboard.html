@@ -229,6 +229,7 @@
             width: 100%;
             border-collapse: collapse;
             font-size: 0.9375rem;
+            table-layout: fixed;
         }
 
         thead {
@@ -240,6 +241,9 @@
             padding: 1rem 1.25rem;
             text-align: left;
             border-bottom: 1px solid var(--border);
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         th {
@@ -432,9 +436,9 @@
 
         .truncate {
             max-width: 200px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            white-space: normal;
+            overflow-wrap: anywhere;
+            word-break: break-word;
         }
 
         .auto-refresh-indicator {
@@ -1613,17 +1617,21 @@
                 const response = await fetchWithFallback(`/api/wolverine/dead-letters?${params.toString()}`);
                 const result = await response.json();
                 
-                deadLettersData = result.data || [];
-                totalPages = result.totalPages || 1;
+                const rawData = result.data ?? result.Data ?? [];
+                deadLettersData = rawData.map(normalizeDeadLetter);
+                totalPages = result.totalPages ?? result.TotalPages ?? 1;
                 
                 // Populate filter dropdowns with available options from API
-                if (result.filters) {
-                    populateFilterDropdowns(result.filters.messageTypes, result.filters.exceptionTypes);
+                const filtersResult = result.filters ?? result.Filters;
+                if (filtersResult) {
+                    populateFilterDropdowns(
+                        filtersResult.messageTypes ?? filtersResult.MessageTypes ?? [],
+                        filtersResult.exceptionTypes ?? filtersResult.ExceptionTypes ?? []);
                 }
                 
                 // Display data and pagination
                 displayDeadLetters(deadLettersData);
-                renderPagination(result.count);
+                renderPagination(result.count ?? result.Count ?? rawData.length);
                 
                 loadStats();
             } catch (error) {
@@ -1639,6 +1647,23 @@
             const exceptionTypeSelect = document.getElementById('filterExceptionType');
             exceptionTypeSelect.innerHTML = '<option value="">All Exception Types</option>' + 
                 exceptionTypes.map(type => `<option value="${type}" ${filters.exceptionType === type ? 'selected' : ''}>${type}</option>`).join('');
+        }
+
+        function normalizeDeadLetter(item) {
+            return {
+                ...item,
+                id: item.id ?? item.Id,
+                executionTime: item.executionTime ?? item.ExecutionTime,
+                body: item.body ?? item.Body,
+                messageType: item.messageType ?? item.MessageType,
+                receivedAt: item.receivedAt ?? item.ReceivedAt,
+                source: item.source ?? item.Source,
+                exceptionType: item.exceptionType ?? item.ExceptionType,
+                exceptionMessage: item.exceptionMessage ?? item.ExceptionMessage,
+                sentAt: item.sentAt ?? item.SentAt,
+                replayable: item.replayable ?? item.Replayable,
+                jsonBody: item.jsonBody ?? item.JsonBody
+            };
         }
 
         function applyFilters() {
@@ -1798,7 +1823,7 @@
                     <td class="truncate" title="${item.exceptionType || 'N/A'}">${item.exceptionType || 'N/A'}</td>
                     <td>${item.receivedAt || 'N/A'}</td>
                     <td>${item.replayable ? '<span class="badge badge-success">Yes</span>' : '<span class="badge badge-danger">No</span>'}</td>
-                    <td>${new Date(item.sentAt).toLocaleString() || 'N/A'}</td>
+                    <td>${formatDate(item.sentAt)}</td>
                     <td>
                         <button class="btn btn-sm" onclick='viewDetails(${index})'>
                             <svg class="icon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1960,7 +1985,7 @@
                 
                 <div class="modal__field">
                     <span class="modal__field-label">Execution Time</span>
-                    <div class="modal__field-value">${item.executionTime ? new Date(item.executionTime).toLocaleString() : 'N/A'}</div>
+                    <div class="modal__field-value">${formatDate(item.executionTime)}</div>
                 </div>
                 
                 <div class="modal__field">
@@ -2037,6 +2062,52 @@
             return div.innerHTML;
         }
 
+        function firstDefined(item, ...names) {
+            for (const name of names) {
+                if (item?.[name] !== undefined && item?.[name] !== null) {
+                    return item[name];
+                }
+            }
+            return undefined;
+        }
+
+        function normalizeIncomingEnvelope(item) {
+            return {
+                ...item,
+                id: firstDefined(item, 'id', 'Id'),
+                status: firstDefined(item, 'status', 'Status'),
+                ownerId: firstDefined(item, 'ownerId', 'OwnerId'),
+                executionTime: firstDefined(item, 'executionTime', 'ExecutionTime'),
+                attempts: firstDefined(item, 'attempts', 'Attempts'),
+                body: firstDefined(item, 'body', 'Body'),
+                messageType: firstDefined(item, 'messageType', 'MessageType'),
+                receivedAt: firstDefined(item, 'receivedAt', 'ReceivedAt'),
+                keepUntil: firstDefined(item, 'keepUntil', 'KeepUntil')
+            };
+        }
+
+        function normalizeNode(item) {
+            return {
+                ...item,
+                id: firstDefined(item, 'id', 'Id'),
+                nodeNumber: firstDefined(item, 'nodeNumber', 'NodeNumber'),
+                description: firstDefined(item, 'description', 'Description'),
+                uri: firstDefined(item, 'uri', 'Uri'),
+                started: firstDefined(item, 'started', 'Started'),
+                healthCheck: firstDefined(item, 'healthCheck', 'HealthCheck'),
+                capabilities: firstDefined(item, 'capabilities', 'Capabilities')
+            };
+        }
+
+        function normalizeNodeAssignment(item) {
+            return {
+                ...item,
+                id: firstDefined(item, 'id', 'Id'),
+                nodeId: firstDefined(item, 'nodeId', 'NodeId'),
+                started: firstDefined(item, 'started', 'Started')
+            };
+        }
+
         // Load Incoming Envelopes with server-side filtering and pagination
         async function loadIncomingEnvelopes() {
             const content = document.getElementById('incomingEnvelopesContent');
@@ -2058,14 +2129,18 @@
                 const response = await fetchWithFallback(`/api/wolverine/incoming-envelopes?${params}`);
                 const result = await response.json();
                 
-                incomingEnvelopesData = result.data || [];
-                envelopeTotalPages = result.totalPages || 1;
+                const rawData = result.data ?? result.Data ?? [];
+                incomingEnvelopesData = rawData.map(normalizeIncomingEnvelope);
+                envelopeTotalPages = result.totalPages ?? result.TotalPages ?? 1;
                 
                 // Populate filter dropdowns
-                populateEnvelopeFilterDropdowns(result.filters?.messageTypes || [], result.filters?.statuses || []);
+                const filtersResult = result.filters ?? result.Filters ?? {};
+                populateEnvelopeFilterDropdowns(
+                    filtersResult.messageTypes ?? filtersResult.MessageTypes ?? [],
+                    filtersResult.statuses ?? filtersResult.Statuses ?? []);
                 
                 displayIncomingEnvelopes(incomingEnvelopesData);
-                renderEnvelopePagination(result.count || 0);
+                renderEnvelopePagination(result.count ?? result.Count ?? rawData.length);
             } catch (error) {
                 content.innerHTML = `<div class="error">Error loading incoming envelopes: ${error.message}</div>`;
             }
@@ -2138,12 +2213,12 @@
                 const statusBadge = item.status === 'Scheduled' ? 'badge-warning' : 
                                    item.status === 'Incoming' ? 'badge-info' : 'badge-success';
                 html += `<tr>
-                    <td class="truncate" title="${item.messageType}">${item.messageType}</td>
-                    <td><span class="badge ${statusBadge}">${item.status}</span></td>
-                    <td>${item.attempts}</td>
-                    <td>${item.ownerId}</td>
-                    <td>${item.executionTime ? new Date(item.executionTime).toLocaleString() : 'N/A'}</td>
-                    <td>${item.receivedAt}</td>
+                    <td class="truncate" title="${escapeHtml(item.messageType || 'N/A')}">${escapeHtml(item.messageType || 'N/A')}</td>
+                    <td><span class="badge ${statusBadge}">${escapeHtml(item.status || 'N/A')}</span></td>
+                    <td>${item.attempts ?? 'N/A'}</td>
+                    <td>${item.ownerId ?? 'N/A'}</td>
+                    <td>${formatDate(item.executionTime)}</td>
+                    <td class="wrap-cell">${escapeHtml(item.receivedAt || 'N/A')}</td>
                 </tr>`;
             });
             
@@ -2216,6 +2291,12 @@
             loadIncomingEnvelopes();
         }
 
+        function formatDate(value) {
+            if (!value) return 'N/A';
+            const date = new Date(value);
+            return Number.isNaN(date.getTime()) ? 'N/A' : date.toLocaleString();
+        }
+
         // Load Nodes
         async function loadNodes() {
             const content = document.getElementById('nodesContent');
@@ -2224,7 +2305,7 @@
             try {
                 const response = await fetchWithFallback('/api/wolverine/nodes');
                 const result = await response.json();
-                const data = result.data || [];
+                const data = (result.data ?? result.Data ?? []).map(normalizeNode);
                 
                 if (data.length === 0) {
                     content.innerHTML = '<p style="text-align:center; color:#999; padding:40px;">No nodes found</p>';
@@ -2236,13 +2317,15 @@
                 html += '</tr></thead><tbody>';
                 
                 data.forEach(item => {
-                    const isHealthy = new Date(item.healthCheck) > new Date(Date.now() - 5 * 60 * 1000);
+                    const healthCheck = new Date(item.healthCheck);
+                    const isHealthy = !Number.isNaN(healthCheck.getTime()) &&
+                        healthCheck > new Date(Date.now() - 5 * 60 * 1000);
                     html += `<tr>
                         <td>${item.nodeNumber}</td>
-                        <td>${item.description}</td>
-                        <td>${item.uri}</td>
-                        <td>${new Date(item.started).toLocaleString()}</td>
-                        <td>${new Date(item.healthCheck).toLocaleString()}</td>
+                        <td class="wrap-cell">${escapeHtml(item.description || 'N/A')}</td>
+                        <td class="wrap-cell">${escapeHtml(item.uri || 'N/A')}</td>
+                        <td>${formatDate(item.started)}</td>
+                        <td>${formatDate(item.healthCheck)}</td>
                         <td>${isHealthy ? '<span class="badge badge-success">Healthy</span>' : '<span class="badge badge-danger">Unhealthy</span>'}</td>
                     </tr>`;
                 });
@@ -2262,7 +2345,7 @@
             try {
                 const response = await fetchWithFallback('/api/wolverine/node-assignments');
                 const result = await response.json();
-                const data = result.data || [];
+                const data = (result.data ?? result.Data ?? []).map(normalizeNodeAssignment);
                 
                 if (data.length === 0) {
                     content.innerHTML = '<p style="text-align:center; color:#999; padding:40px;">No node assignments found</p>';
@@ -2275,9 +2358,9 @@
                 
                 data.forEach(item => {
                     html += `<tr>
-                        <td>${item.id}</td>
-                        <td>${item.nodeId || 'N/A'}</td>
-                        <td>${new Date(item.started).toLocaleString()}</td>
+                        <td class="wrap-cell">${escapeHtml(item.id || 'N/A')}</td>
+                        <td class="wrap-cell">${escapeHtml(item.nodeId || 'N/A')}</td>
+                        <td>${formatDate(item.started)}</td>
                     </tr>`;
                 });
                 

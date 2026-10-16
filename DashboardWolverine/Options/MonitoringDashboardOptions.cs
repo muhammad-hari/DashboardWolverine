@@ -18,9 +18,9 @@ public class MonitoringDashboardOptions
     public string DashboardTitle { get; set; } = "API Monitoring Dashboard";
 
     /// <summary>
-    /// Default API endpoint used to fetch monitoring data. Default: "/api/monitoring/stats"
+    /// Default API endpoint used to fetch monitoring data. Default: "/api/wolverine/stats"
     /// </summary>
-    public string DefaultDataEndpoint { get; set; }
+    public string DefaultDataEndpoint { get; set; } = "/api/wolverine/stats";
 
     /// <summary>
     /// Authorization function. Return true to allow access, false to deny.
